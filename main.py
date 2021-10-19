@@ -18,7 +18,6 @@ def defineColor(x, y, xcoords, ycoords, colors, k):
         else:
             bluecount += 1
             
-    
     if (redcount > bluecount):
         return "red"
     else:
@@ -61,6 +60,7 @@ def count_mistakes(x, y, colors, k):
             if color == "blue":
                 mistakecount += 1
     return mistakecount
+
 
 def run_experiment(n, f, k):
     #Generate point locations randomly within the square
@@ -106,6 +106,7 @@ def run_experiment(n, f, k):
 
     #Show the points + triangle
     plt.show()
+
 
 #Run the program
 def main():
