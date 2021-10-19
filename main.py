@@ -2,96 +2,119 @@ import numpy as nm
 import matplotlib.pyplot as plt
 import random
 import math
+import sys
+from matplotlib.patches import Polygon
 
-#look at the colors of the k nearest neighbours and return which color the point will get
-def defineColor(x, y, xcoords, ycoords, colors):
-    neighbours = nearestNeighbour(x, y, xcoords, ycoords, k);
+#look at the colors of the k nearest neighbours and return which color the point will be classified
+def defineColor(x, y, xcoords, ycoords, colors, k):
+    neighbours = nearestNeighbour(x, y, xcoords, ycoords, k)
     
-    redcount = 0;
-    bluecount = 0;
+    redcount = 0
+    bluecount = 0
     
     for (a, b, distance) in neighbours:
         if (colors[(a,b)] == "red"):
-            redcount = redcount + 1;
+            redcount += 1
         else:
-            bluecount = bluecount + 1;
+            bluecount += 1
             
     
     if (redcount > bluecount):
-        return "red";
+        return "red"
     else:
-        return "blue";
+        return "blue"
 
 
 #calculate the k nearest neighbours
 def nearestNeighbour(x, y, xcoords, ycoords, k):
-    neighbours = [];
-    furthestdistance = 100;
-    
-    for nx, ny in zip(xcoords, ycoords):
-        if distance(x, y, nx, ny) < furthestdistance and distance(x, y, nx, ny) != 0:
-            orderList(neighbours, nx, ny, distance(x, y, nx, ny), k);
-        else:
-            continue;
-    
-    return neighbours;
-            
-                
+    neighbours = []
+    #List of all points
+    list_of_points = zip(xcoords, ycoords)
+    #Makes a list of all the distances
+    dists = nm.array([abs(math.hypot(x - i, y - j)) for i,j in list_of_points if abs(math.hypot(x - i, y - j)) != 0])
+    #Get the indexes for the k lowest distances
+    min_dist_indexes = nm.argpartition(dists, k)
+    #For i < k
+    for i in range(0, k):
+        #Add the x, y, and distance for the k nearest neighbors to the list
+        neighbours.append((xcoords[min_dist_indexes[i]], ycoords[min_dist_indexes[i]], dists[min_dist_indexes[i]]))
+
+    return neighbours
+
+#Count the number of mislabelled points
+def count_mistakes(x, y, colors, k):
+    mistakecount = 0
+
+    #go through all the points
+    for px, py in zip(x, y):
+        #check color for that point, as determined by nearest neighbors
+        color = defineColor(px, py, x, y, colors, k)
         
-#the distancer between two points     
-def distance(x, y, nx, ny):
-    return math.sqrt((nx-x)*(nx-x) + (ny-y)*(ny-y))
-
-#update the neighbours list with the new point, checking if the distance is shorter and popping the last element if the count is over k
-def orderList(l, x, y, distance, k):
-    index = 0;
-    for (a, b, c) in l:
-        if (c > distance):
-            l.insert(index, [(x, y, distance)]);
-    index = index + 1;
-    
-    if(len(l) > k):
-        l.pop(k-1);
-    
-    return l;
-
-n = 500
-f =  0.7             
-k = 5
-
-x = nm.random.uniform(0.0, 10.0, n)
-y = nm.random.uniform(0.0, 10.0, n)
-
-colors = {};
-
-
-for i in range(0 , n):
-    if (y[i] >= 3) and (x[i] <= 7) and (x[i] >= y[i]):
-        if (random.uniform(0,1) > f ):
-            plt.scatter(x[i], y[i], c="blue")
-            colors.update({(x[i],y[i]):"blue"});
+        #if point is within the triangle...
+        if (py >= 3) and (px <= 7) and (px >= py):
+            #And mislabelled red, increment the mistake counter
+            if color == "red":
+                mistakecount += 1
+        #else if the point is outside the triangle...
         else:
-            plt.scatter(x[i], y[i], c="red")
-            colors.update({(x[i],y[i]):"red"});
-    else:
-        if (random.uniform(0,1) > f ):                                                                                                                      
-            plt.scatter(x[i], y[i], c="red")
-            colors.update({(x[i],y[i]):"red"});
+            #and the point is mislabelled blue, increment the mistake counter
+            if color == "blue":
+                mistakecount += 1
+    return mistakecount
+
+def run_experiment(n, f, k):
+    #Generate point locations randomly within the square
+    x = nm.random.uniform(0.0, 10.0, n)
+    y = nm.random.uniform(0.0, 10.0, n)
+
+    colors = {}
+
+    for i in range(0 , n):
+        #If the points falls within the triangle...
+        if (y[i] >= 3) and (x[i] <= 7) and (x[i] >= y[i]):
+            #Point is blue by default
+            if (random.uniform(0,1) > f ):
+                plt.scatter(x[i], y[i], c="blue", s=10)
+                colors.update({(x[i],y[i]):"blue"})
+            #Unless the probability check is failed, then it's red
+            else:
+                plt.scatter(x[i], y[i], c="red", s=10)
+                colors.update({(x[i],y[i]):"red"})
+        #If the point is outside the triangle...
         else:
-            plt.scatter(x[i], y[i], c="blue")
-            colors.update({(x[i],y[i]):"blue"});
+            #Point is red by default
+            if (random.uniform(0,1) > f ):                                                                                                                      
+                plt.scatter(x[i], y[i], c="red", s=10)
+                colors.update({(x[i],y[i]):"red"})
+            #Unless the probality check is failed, then it's blue
+            else:
+                plt.scatter(x[i], y[i], c="blue", s=10)
+                colors.update({(x[i],y[i]):"blue"})
 
-plt.show()
+    #Draw triangle T
+    pts = nm.array([[3,3], [7, 3], [7, 7]])
+    T = Polygon(pts, closed=True)
+    ax = plt.gca()
+    T.set_fill(False)
+    T.set_edgecolor("k")
+    ax.add_patch(T)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
 
-mistakecount = 0;
+    #print the number of mistakes
+    print(count_mistakes(x, y, colors, k))
 
-#go through all the points and do nearest neighbour search
-for px, py in zip(x, y):
-    color = defineColor(px, py, x, y, colors);
-    
-    if (py >= 3) and (px <= 7) and (px >= py) and color =="blue":
-        mistakecount = mistakecount + 1;
+    #Show the points + triangle
+    plt.show()
 
-print(mistakecount)
+#Run the program
+def main():
+    #takes the argument from the command line for the values of n, f, and k
+    args = sys.argv[1:]
+    run_experiment(int(args[0]), float(args[1]), int(args[2]))
+
+if __name__ == "__main__":
+    main()
+
 
                                                                                                                                     
