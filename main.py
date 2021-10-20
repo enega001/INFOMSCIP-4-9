@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import random
 import math
 import sys
+import os
 from matplotlib.patches import Polygon
 
 #look at the colors of the k nearest neighbours and return which color the point will be classified
@@ -63,6 +64,7 @@ def count_mistakes(x, y, colors, k):
 
 
 def run_experiment(n, f, k):
+    
     #Generate point locations randomly within the square
     x = nm.random.uniform(0.0, 10.0, n)
     y = nm.random.uniform(0.0, 10.0, n)
@@ -102,17 +104,33 @@ def run_experiment(n, f, k):
     ax.set_ylim(0, 10)
 
     #print the number of mistakes
-    print(count_mistakes(x, y, colors, k))
-
-    #Show the points + triangle
-    plt.show()
+    return count_mistakes(x, y, colors, k)
 
 
 #Run the program
 def main():
     #takes the argument from the command line for the values of n, f, and k
     args = sys.argv[1:]
-    run_experiment(int(args[0]), float(args[1]), int(args[2]))
+    results = []
+
+    #fills list of mistake counts
+    for i in range(0, int(args[3])):
+        results.append(run_experiment(int(args[0]), float(args[1]), int(args[2])))
+    
+    #creates output file if none exists
+    if not os.path.exists('output.txt'):
+        os.mknod('output.txt')
+
+    #writes count to file, including header of the experiment info
+    with open('output.txt', 'a+') as f:
+        f.write('n = %i, f = %f, k = %i' %(int(args[0]), float(args[1]), int(args[2])))
+        f.write("\n")
+        for output in results:
+            f.write(str(output))
+            f.write("\n")
+
+    f.close()
+
 
 if __name__ == "__main__":
     main()
