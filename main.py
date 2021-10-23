@@ -74,7 +74,7 @@ def run_experiment(n, f, k):
 
     for i in range(0, n):
         # If the points falls within the triangle...
-        if ((y[i] >= 3) and (y[i] <= 1.73*(x[i]-3) + 3) and (y[i] <= -1.73*(x[i]-6.722) + 3)) or ((y[i] <= 5.15) and (y[i] >= -1.73*(x[i] - 3) + 5.15) and (y[i] >= 1.73*(x[i] - 6.72) + 5)):
+        if ((x[i]>= 2) and (x[i] <= 4) and (y[i] >= 1) and (y[i] <= 9) and (y[i] <= (-4*(x[i]-4))+1)):
             # Point is blue by default
             if (random.uniform(0, 1) > f):
                 plt.scatter(x[i], y[i], c="blue", s=10)
@@ -95,7 +95,7 @@ def run_experiment(n, f, k):
                 colors.update({(x[i], y[i]): "blue"})
 
     # Draw triangle T
-    pts = nm.array([[3, 3], [3.621, 4.075], [3, 5.15], [4.243, 5.15], [4.861, 6.22], [5.479, 5.15], [6.807, 5.15], [6.143, 4.002], [6.722, 3], [5.564, 3], [4.903, 1.857], [4.243, 3]])
+    pts = nm.array([[2, 1], [2,9], [4,1]])
     T = Polygon(pts, closed=True)
     ax = plt.gca()
     T.set_fill(False)
